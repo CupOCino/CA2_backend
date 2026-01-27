@@ -65,6 +65,18 @@ app.post('/addassignment', async (req, res) => {
     }
 });
 
+app.delete('/deleteassignment/:id', async (req, res) => {
+    const { id } = req.params;
+    try{
+        let connection = await mysql.createConnection(dbConfig);
+        await connection.execute('DELETE FROM cards WHERE id = ?', [id]);
+        res.status(201).json({ message: 'Assignment ' + id + ' deleted successfully!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error - could not delete assignment ' + id });
+    }
+});
+
 // Start server
 app.listen(port, () => {
     console.log(`Backend running on port ${port}`);
