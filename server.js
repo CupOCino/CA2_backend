@@ -53,6 +53,18 @@ app.get('/allassignments', async (req, res) => {
     }
 });
 
+app.post('/addassignment', async (req, res) => {
+    const { module_name, assignment_title } = req.body;
+    try {
+        let connection = await mysql.createConnection(dbConfig);
+        await connection.execute('INSERT INTO assignments (module_name, assignment_title) VALUES (?, ?)', [module_name, assignment_title]);
+        res.status(201).json({message: 'Assignment ' + assignment_title + ' added successfully'});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: 'Server error - could not add assignment ' + assignment_title});
+    }
+});
+
 // Start server
 app.listen(port, () => {
     console.log(`Backend running on port ${port}`);
