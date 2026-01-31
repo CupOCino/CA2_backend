@@ -44,7 +44,7 @@ app.get('/allassignments', async (req, res) => {
     try {
         const connection = await mysql.createConnection(dbConfig);
         const [rows] = await connection.execute(
-            'SELECT id, module_name, assignment_title, status FROM assignments'
+            'SELECT id, module_name, assignment_title, description, status FROM assignments'
         );
         res.json(rows);
     } catch (err) {
@@ -54,10 +54,10 @@ app.get('/allassignments', async (req, res) => {
 });
 
 app.post('/addassignment', async (req, res) => {
-    const { module_name, assignment_title } = req.body;
+    const { module_name, assignment_title, description, status } = req.body;
     try {
         let connection = await mysql.createConnection(dbConfig);
-        await connection.execute('INSERT INTO assignments (module_name, assignment_title) VALUES (?, ?)', [module_name, assignment_title]);
+        await connection.execute('INSERT INTO assignments (module_name, assignment_title, description, status) VALUES (?, ?, ?, ?)', [module_name, assignment_title, description, status]);
         res.status(201).json({message: 'Assignment ' + assignment_title + ' added successfully'});
     } catch (err) {
         console.error(err);
@@ -79,12 +79,12 @@ app.delete('/deleteassignment/:id', async (req, res) => {
 
 app.put('/updateassignment/:id', async (req, res) => {
     const { id } = req.params;
-    const { module_name, assignment_title } = req.body;
+    const { module_name, assignment_title, description, status } = req.body;
     let connection;
     try{
         connection = await mysql.createConnection(dbConfig);
-        await connection.execute('UPDATE assignments SET module_name = ?, assignment_title = ? WHERE id = ?', [module_name, assignment_title, id]);
-        res.status(201).json({ message: 'Assignment ' + id + ' updated successfully!' });
+        await connection.execute('UPDATE assignments SET module_name = ?, assignment_title = ?, description = ?, status = ? WHERE id = ?', [module_name, assignment_title, description, status, id]);
+        res.status(201).json({ message: 'Assignment ' + assignment_title + ' updated successfully!' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not update assignment ' + id });
