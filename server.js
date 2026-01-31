@@ -77,6 +77,22 @@ app.delete('/deleteassignment/:id', async (req, res) => {
     }
 });
 
+app.put('/updateassignment/:id', async (req, res) => {
+    const { id } = req.params;
+    const { module_name, assignment_title } = req.body;
+    let connection;
+    try{
+        connection = await mysql.createConnection(dbConfig);
+        await connection.execute('UPDATE assignments SET module_name = ?, assignment_title = ? WHERE id = ?', [module_name, assignment_title, id]);
+        res.status(201).json({ message: 'Assignment ' + id + ' updated successfully!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error - could not update assignment ' + id });
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
 // Start server
 app.listen(port, () => {
     console.log(`Backend running on port ${port}`);
