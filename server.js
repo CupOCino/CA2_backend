@@ -35,14 +35,15 @@ const dbConfig = {
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 100,
     queueLimit: 0,
 };
 
 // GET all assignments
 app.get('/allassignments', async (req, res) => {
+    let connection;
     try {
-        const connection = await mysql.createConnection(dbConfig);
+        connection = await mysql.createConnection(dbConfig);
         const [rows] = await connection.execute(
             'SELECT id, module_name, assignment_title, description, status FROM assignments'
         );
@@ -50,30 +51,38 @@ app.get('/allassignments', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error for allassignments' });
+    } finally {
+        if (connection) await connection.end();
     }
 });
 
 app.post('/addassignment', async (req, res) => {
     const { module_name, assignment_title, description, status } = req.body;
+    let connection;
     try {
-        let connection = await mysql.createConnection(dbConfig);
+        connection = await mysql.createConnection(dbConfig);
         await connection.execute('INSERT INTO assignments (module_name, assignment_title, description, status) VALUES (?, ?, ?, ?)', [module_name, assignment_title, description, status]);
         res.status(201).json({message: 'Assignment ' + assignment_title + ' added successfully'});
     } catch (err) {
         console.error(err);
         res.status(500).json({message: 'Server error - could not add assignment ' + assignment_title});
+    } finally {
+        if (connection) await connection.end();
     }
 });
 
 app.delete('/deleteassignment/:id', async (req, res) => {
     const { id } = req.params;
+    let connection;
     try{
-        let connection = await mysql.createConnection(dbConfig);
+        connection = await mysql.createConnection(dbConfig);
         await connection.execute('DELETE FROM assignments WHERE id = ?', [id]);
         res.status(201).json({ message: 'Assignment ' + id + ' deleted successfully!' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not delete assignment ' + id });
+    } finally {
+        if (connection) await connection.end();
     }
 });
 
