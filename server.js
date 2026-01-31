@@ -13,7 +13,7 @@ app.use(express.json());
 
 // CORS
 const allowedOrigins = [
-    "http://localhost:3000",
+    "https://c219-ca2-frontend.onrender.com",
     // add your frontend domain when deployed
 ];
 
