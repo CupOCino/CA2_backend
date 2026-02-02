@@ -3,6 +3,9 @@ const mysql = require('mysql2/promise');
 const cors = require('cors');
 require('dotenv').config();
 
+const jwt = require("jsonwebtoken");
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
+
 const app = express();
 
 // Use Render's PORT or fallback to 3001 locally
@@ -26,6 +29,26 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+function requireAuth(req, res, next) {
+    const header = req.headers.authorization;
+
+    if (!header) {
+        return res.status(401).json({ message: "Missing Authorization header" });
+    }
+    const [type, token] = header.split(" ");
+    if (type !== "Bearer" || !token) {
+        return res.status(401).json({ message: "Invalid Authorization format" });
+    }
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "Invalid or expired token" });
+    }
+}
+
 
 // Database config
 const dbConfig = {
@@ -56,7 +79,7 @@ app.get('/allassignments', async (req, res) => {
     }
 });
 
-app.post('/addassignment', async (req, res) => {
+app.post('/addassignment', requireAuth, async (req, res) => {
     const { module_name, assignment_title, description, status } = req.body;
     let connection;
     try {
@@ -71,7 +94,7 @@ app.post('/addassignment', async (req, res) => {
     }
 });
 
-app.delete('/deleteassignment/:id', async (req, res) => {
+app.delete('/deleteassignment/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     let connection;
     try{
@@ -86,7 +109,7 @@ app.delete('/deleteassignment/:id', async (req, res) => {
     }
 });
 
-app.put('/updateassignment/:id', async (req, res) => {
+app.put('/updateassignment/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { module_name, assignment_title, description, status } = req.body;
     let connection;
@@ -97,6 +120,41 @@ app.put('/updateassignment/:id', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not update assignment ' + id });
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
+// login route
+app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+    let connection;
+    try {
+        connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute(
+            "SELECT id, username, password FROM users WHERE username = ?",
+            [username]
+        );
+        if (rows.length === 0) {
+            return res.status(401).json({ message: "Invalid username or password" });
+        }
+
+        const user = rows[0];
+
+        if (user.password !== password) {
+            return res.status(401).json({ message: "Invalid username or password" });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
+        res.json({ token });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error during login" });
     } finally {
         if (connection) await connection.end();
     }
