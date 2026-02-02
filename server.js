@@ -126,7 +126,7 @@ app.put('/updateassignment/:id', requireAuth, async (req, res) => {
 });
 
 // login route
-app.post("/", async (req, res) => {
+app.post("/login", async (req, res) => {
     const { username, password } = req.body;
     let connection;
     try {
