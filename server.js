@@ -79,7 +79,7 @@ app.get('/allassignments', async (req, res) => {
     }
 });
 
-app.post('/addassignment', requireAuth, async (req, res) => {
+app.post('/addassignment', async (req, res) => {
     const { module_name, assignment_title, description, status } = req.body;
     let connection;
     try {
@@ -94,7 +94,7 @@ app.post('/addassignment', requireAuth, async (req, res) => {
     }
 });
 
-app.delete('/deleteassignment/:id', requireAuth, async (req, res) => {
+app.delete('/deleteassignment/:id', async (req, res) => {
     const { id } = req.params;
     let connection;
     try{
@@ -109,7 +109,7 @@ app.delete('/deleteassignment/:id', requireAuth, async (req, res) => {
     }
 });
 
-app.put('/updateassignment/:id', requireAuth, async (req, res) => {
+app.put('/updateassignment/:id', async (req, res) => {
     const { id } = req.params;
     const { module_name, assignment_title, description, status } = req.body;
     let connection;
